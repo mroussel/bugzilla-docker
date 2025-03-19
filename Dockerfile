@@ -1,7 +1,4 @@
-FROM ubuntu:20.04
-LABEL maintainer="Stefan Pielmeier <stefan@symlinux.com>"
-LABEL version 0.2
-LABEL description="Docker image for bugzilla on Ubuntu 20.04 using PerlCGI/Apache2"
+FROM ubuntu:24.04
 
 ENV bugzilla_branch=release-5.0-stable
 ENV APACHE_USER=www-data
@@ -16,9 +13,9 @@ ARG DEBIAN_FRONTEND=noninteractive
 WORKDIR /
 
 # Prerequisites
-RUN apt update
-RUN apt-get upgrade -y
-RUN apt-get install -y \
+RUN apt update && \ 
+      apt-get upgrade -y && \
+      apt-get install -y \
       vim \
       bash \
       supervisor \
@@ -72,13 +69,15 @@ RUN apt-get install -y \
       libemail-reply-perl \
       apache2 \
       postfix \
-      git
-RUN rm -rf /var/lib/apt/lists/*
-RUN apt clean
+      git \
+      ncat && \
+      rm -rf /var/lib/apt/lists/* && \
+      apt clean
 
 # prepare the entrypoint script just to start the supervisord
 ADD entrypoint.sh /entrypoint.sh
 RUN chmod 700 /entrypoint.sh
+
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN chmod 700 /etc/supervisor/conf.d/supervisord.conf
 
@@ -98,10 +97,7 @@ RUN perl -MCPAN -e "install CPAN"
 WORKDIR /var/www/html/bugzilla
 RUN ./checksetup.pl --check-modules # generates a perl module check
 RUN ./install-module.pl --all  # installes missing perl modules
-ADD perl_patch /tmp/perl_patch
-# needed to fix Perl5 issue #17271,
-# see https://stackoverflow.com/questions/56475712/getting-undefined-subroutine-utf8swashnew-called-at-bugzilla-util-pm-line-109
-RUN patch -u /usr/share/perl/5.30.0/Safe.pm -i /tmp/perl_patch 
+
 # now we can continue with normal setup
 RUN ./checksetup.pl  # generates localconfig file
 

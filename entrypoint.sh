@@ -30,6 +30,12 @@ echo "\$answer{'ADMIN_REALNAME'} = '${BUGZILLA_ADMIN_REALNAME}';" >> /tmp/checks
 echo "\$answer{'urlbase'} = '${SERVERNAME}';" >> /tmp/checksetup_answers.txt
 cat /tmp/checksetup_answers.txt
 
+# Wait for the database to be ready
+while ! nc -z "$BUGZILLA_DB_HOST" 3306; do
+  echo "Waiting for the database..."
+  sleep 3
+done
+
 ./checksetup.pl /tmp/checksetup_answers.txt # generates localconfig file
 # rm /tmp/checksetup_answers.txt
 
