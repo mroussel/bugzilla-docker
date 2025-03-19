@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  bugzilla:
+    build: .
+    #image: bugzilla
+    container_name: bugzilla
+    restart: always
+    depends_on:
+      - mariadb
+    environment:
+      BUGZILLA_DB_HOST: mariadb
+      BUGZILLA_DB_NAME: bugzilla
+      BUGZILLA_DB_USER: bugzilla
+      BUGZILLA_DB_PASS: bugzilla_password
+      BUGZILLA_DB_PORT: 3306
+      BUGZILLA_ADMIN_EMAIL: test@test.com
+      BUGZILLA_ADMIN_PASS: Hello2Bugzilla
+      BUGZILLA_ADMIN_REALNAME: Test Admin
+      POSTFIX_HOSTNAME: localhost
+      POSTFIX_NETWORKS: 192.168.1.1
+    ports:
+      - "80:80"
+    volumes:
+      - bugzilla_data:/var/www/webapps/bugzilla
+    networks:
+      - bugzilla_network
+    depends_on:
+      - mariadb
+
+  mariadb:
+    image: mariadb:10.6
+    container_name: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: bugzilla
+      MYSQL_USER: bugzilla
+      MYSQL_PASSWORD: bugzilla_password
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - bugzilla_network
+
+volumes:
+  bugzilla_data:
+  mariadb_data:
+
+networks:
+  bugzilla_network:
+    driver: bridge
